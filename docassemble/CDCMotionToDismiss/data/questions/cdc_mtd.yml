@@ -1,0 +1,266 @@
+comment: |
+  The metadata section controls the tab title and saved interview title. You can delete this section if you include this YAML file in another YAML file.
+metadata:
+  title: |
+    Motion to Dismiss - CDC Moratorium
+  short title: |
+    CDC Motion
+---
+comment: |
+  This section is used by MAVirtualCourts to control how some of the questions work.
+mandatory: True
+code: |
+  interview_metadata # make sure we initialize the object
+  if not defined("interview_metadata['cdc_mtd']"):
+    interview_metadata.initializeObject('cdc_mtd')
+  interview_metadata['cdc_mtd'].update({
+    'title': 'Motion to Dismiss - CDC Moratorium',
+    'short title': 'CDC Motion',
+    'description': 'Use this form to ask the court to stop your eviction if you have already sent your landlord a notice under the Centers for Disease Control and Prevention\'s eviction moratorium.',
+    'original_form': '',
+    'allowed courts': [
+      'Boston Municipal Court',
+      'District Court',
+      'Housing Court',
+      'Superior Court',
+    ],
+    'categories': [
+      'Housing',
+    ],
+    'logic block variable': 'cdc_mtd',
+    'attachment block variable': 'cdc_mtd_attachment',
+    'typical role': 'defendant',
+  })
+---
+include:
+  - docassemble.MAVirtualCourt:basic-questions.yml
+---
+features:
+  navigation: True
+---
+sections:
+  - review_cdc_mtd: Review your answers
+---
+code: |
+  interview_short_title = "Ask the Court to Dismiss Your Eviction - CDC Moratorium"
+---
+objects:
+  - other_parties: PeopleList.using(ask_number=True, target_number=1)
+---
+id: interview_order_cdc_mtd
+code: |
+  # This is a placeholder to control logic flow in this interview
+  basic_questions_intro_screen 
+  cdc_mtd_intro
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["cdc_mtd"]["allowed courts"]
+  nav.set_section('review_cdc_mtd')
+  user_role = 'defendant'
+  provided_declaration_before_ntq
+  if when_sent_notice == "later":
+    link_cdc_moratorium
+  attaching_declaration
+  ready_to_sign
+  dont_have_hearing_date
+  # signature_date
+  str(plaintiffs)
+  docket_numbers[0]
+  courts[0].address.county
+  users[0]
+  str(defendants)
+  cdc_mtd_preview_question # Pre-canned preview screen
+  basic_questions_signature_flow
+  users[0].signature
+  cdc_mtd = True
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Motion to Dismiss - CDC Moratorium
+continue button field: cdc_mtd_intro
+question: |
+  Motion to Dismiss - CDC Moratorium
+subquestion: |
+  Use this form to ask the court to stop your eviction if you have already sent your landlord a notice under the Centers for Disease Control and Prevention's eviction moratorium.
+---
+id: Placeholder preview screen
+continue button field: cdc_mtd_preview_question
+question: |
+  Preview of your form
+subquestion: |
+  Here is a preview of the form you'll sign on the next page. 
+  
+   ${cdc_mtd_attachment['preview']}
+---
+id: When did you send your landlord a copy of the declaration?
+question: |
+  When did you send your landlord a copy of the declaration?
+fields:
+  - no label: when_sent_notice
+    datatype: radio
+    choices:
+      - Before I got a notice from my landlord: before
+      - After getting the notice from my landlord: after
+      - I have not sent it yet. I will send it now.: later
+  - note: |
+      Okay. You can [fill out the declaration online](https://apps.suffolklitlab.org/start/cdc_moratorium). Do that and come back.
+    show if:
+      variable: when_sent_notice
+      is: "later"
+---
+event: link_cdc_moratorium
+decoration: hand-paper
+question: |
+  Come back in a few minutes
+subquestion: |
+  You should complete the CDC Declaration form now. You can do it for 
+  free online. It only takes about 5 minutes.
+  
+  ${ action_button_html("https://apps.suffolklitlab.org/run/cdc_moratorium", label="Start CDC Declaration Form") }
+---
+code: |
+  provided_declaration_before_ntq = when_sent_notice == "before"
+---
+id: Declaration
+question: |
+  Declaration
+subquestion: |
+  You can attach a copy of the declaration you sent your landlord.
+fields:
+  - Are you ready to attach a copy of the declaration now?: ask_attaching_declaration
+    datatype: yesnoradio
+  - Upload a copy or photograph of the declaration you sent your landlord: declaration
+    datatype: file
+    show if: ask_attaching_declaration
+---
+code: |
+  if when_sent_notice == 'later':
+    attaching_declaration = False
+  else:
+    attaching_declaration = ask_attaching_declaration
+---
+id: Service
+question: |
+  Service
+subquestion: |
+  You need to give a copy of this motion to your landlord. When and how will you do it?
+fields:
+  - I don't know yet: not_ready_to_sign
+    datatype: yesno
+  - I will deliver on: service_date
+    datatype: date
+    hide if: not_ready_to_sign
+  - I will deliver by: service_method
+    hide if: not_ready_to_sign
+    choices:
+      - Email: emailed
+      - Mail: mailed
+      - In person: delivered in hand
+      - E-file MA: delivered via eFile MA
+---
+code: |
+  ready_to_sign = not not_ready_to_sign
+---
+id: hearing date
+question: |
+  Hearing date
+subquestion: |
+  You can ask the court to schedule this motion for a time 
+  of your choice. But the court has the final say.
+  
+  If you already have a court date scheduled, you should
+  enter that date.
+fields:
+  - I don't know when I want to schedule this yet: dont_have_hearing_date
+    datatype: yesno
+  - 'Date of proposed hearing': proposed_hearing_date
+    datatype: date
+    required: False
+    hide if: dont_have_hearing_date
+---
+id: landlords name
+question: |
+  What is your landlord's name?
+subquestion: |
+  Write it the same way it appears on the paperwork that told you
+  to go to court.
+fields:
+  - Landlord's full name: other_parties[0].name.first
+---
+progress: 100
+mandatory: True
+id: download screen
+question: |
+  Your form is ready to download and file
+subquestion: |
+  
+  Below is a preview of your form. 
+  Click on the image to open it in a new window.
+  
+  ${cdc_mtd_attachment['final'] }
+  
+  [Your declaration form](${ declaration.url_for() })
+  
+  [Download as one file](${pdf_concatenate(cdc_mtd_attachment['final'], declaration).url_for()})
+  
+  1. Print 3 copies of this form.
+  2. Deliver a copy to the ${ courts[0] }.
+  3. Send a copy to your landlord.
+need: cdc_mtd
+attachment code: cdc_mtd_attachment['final']
+---
+objects:
+  - cdc_mtd_attachment: DADict
+---
+attachment:
+    variable name: cdc_mtd_attachment[i]
+    name: CDC Motion
+    filename: CDC_Motion
+    docx template file: cdc_mtd.docx
+---
+id: cdc_mtd review screen
+event: review_cdc_mtd
+question: |
+  Placeholder Review Screen
+subquestion: |
+  Edit your answers below
+review: 
+  - Edit: service_date
+    button: |
+      Date of service:
+      ${ service_date.format() }
+  - Edit: provided_declaration_before_ntq
+    button: |
+      Did you send your landlord a copy of the CDC declaration form before you got a Notice to Quit?:
+      ${ word(yesno(provided_declaration_before_ntq)) }
+  - Edit: attaching_declaration
+    button: |
+      Are you ready to upload a copy of the declaration now?:
+      ${ word(yesno(attaching_declaration)) }
+  - Edit: service_method
+    button: |
+      Service method:
+      ${ service_method }
+  - Edit: proposed_hearing_date
+    button: |
+      Date of proposed hearing:
+      ${ proposed_hearing_date.format() }
+  - Edit: signature_date
+    button: |
+      Signature date:
+      ${ signature_date }
+  - Edit: plaintiffs[0].name.first
+    button: |
+      Landlord:
+      ${ plaintiffs }
+  - Edit: docket_numbers[0].name.first
+    button: |
+      Docket number:
+      ${ docket_numbers[0] }
+  - Edit: users[0].signature
+    button: |
+      Signature:
+      ${ users[0].signature }
+  - Edit: users[0].name.first
+    button: |
+      Your name:
+      ${ users[0] }
