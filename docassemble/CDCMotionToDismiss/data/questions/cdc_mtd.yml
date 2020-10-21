@@ -199,9 +199,11 @@ subquestion: |
   
   ${cdc_mtd_attachment['final'] }
   
+  % if attaching_declaration:
   [Your declaration form](${ declaration.url_for() })
   
   [Download as one file](${pdf_concatenate(cdc_mtd_attachment['final'], declaration).url_for()})
+  % endif
   
   1. Print 3 copies of this form.
   2. Deliver a copy to the ${ courts[0] }.
