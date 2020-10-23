@@ -53,6 +53,8 @@ code: |
   # This is a placeholder to control logic flow in this interview
   basic_questions_intro_screen 
   cdc_mtd_intro
+  if eviction_causes.any_true():
+    need_another_motion
   # Set the allowed courts for this interview
   allowed_courts = interview_metadata["cdc_mtd"]["allowed courts"]
   nav.set_section('review_cdc_mtd')
@@ -65,10 +67,10 @@ code: |
   dont_have_hearing_date
   # signature_date
   str(plaintiffs)
-  docket_numbers[0]
+  docket_number
   courts[0].address.county
   users[0]
-  str(defendants)
+  # str(defendants) no other defendants for first version, need to have allow defendants to uploade multiple declarations if we are doing more than one D
   cdc_mtd_preview_question # Pre-canned preview screen
   basic_questions_signature_flow
   users[0].signature
@@ -82,6 +84,37 @@ question: |
   Motion to Dismiss - CDC Moratorium
 subquestion: |
   Use this form to ask the court to stop your eviction if you have already sent your landlord a notice under the Centers for Disease Control and Prevention's eviction moratorium.
+---
+id: eviction exceptions
+question: |
+  Why is your landlord evicting you?
+subquestion: |
+  The Summons and Complaint that tells you about the eviction includes the reason your landlord is evicting you.  
+  
+  If your landlord is evicting you for certain reasons, you will need to use a different motion.
+  
+  Check the boxes that match any of the reasons your landlord has put next to the word 'because' on the summons and complaint.
+fields:
+  - "My landlord is evicting me for": eviction_causes
+    datatype: checkboxes
+    choices:
+      - 'criminal activity': criminal activity
+      - 'threatening the health or safety of other residents': threatening the health or safety of other residents
+      - 'damaging property': damaging property
+      - 'threatening to damage property': threatening to damage property
+      - 'violating health or safety codes': violating health or safety codes
+      - 'violating terms of my lease or tenancy agreement not related to rent': violating terms of your lease or tenancy agreement not related to rent
+---
+id: send to legal tactics form 20 motion to dismiss
+event: need_another_motion
+question: |
+  You will have to use a different motion
+subquestion: |
+  You said your landlord is evicting you for ${eviction_causes}
+buttons:
+  - Try again: restart
+  - Learn More: exit
+    url: https://www.masslegalhelp.org/housing/lt1-chapter-12-stopping-eviction-before-trial#motiontodismiss
 ---
 id: Placeholder preview screen
 continue button field: cdc_mtd_preview_question
@@ -255,10 +288,13 @@ review:
     button: |
       Landlord:
       ${ plaintiffs }
-  - Edit: docket_numbers[0].name.first
+      
+  - Edit: docket_number
+ # - Edit: docket_numbers[0].name.first
     button: |
       Docket number:
-      ${ docket_numbers[0] }
+      ${ docket_number }
+  #    ${ docket_numbers[0] }
   - Edit: users[0].signature
     button: |
       Signature:
