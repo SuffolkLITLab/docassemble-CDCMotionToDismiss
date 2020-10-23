@@ -47,6 +47,7 @@ code: |
 ---
 objects:
   - other_parties: PeopleList.using(ask_number=True, target_number=1)
+  - eviction_cause_image: DAStaticFile.using(filename='eviction-cause.png', alt_text='The because section on page 1 of Summons and Complaint')
 ---
 id: interview_order_cdc_mtd
 code: |
@@ -89,11 +90,13 @@ id: eviction exceptions
 question: |
   Why is your landlord evicting you?
 subquestion: |
-  The Summons and Complaint that tells you about the eviction includes the reason your landlord is evicting you.  
+  The Summons and Complaint that tells you about the eviction includes the reason your landlord is evicting you.
+  
+  [${eviction_cause_image.show(width='35em')}](${eviction_cause_image.url_for()})
   
   If your landlord is evicting you for certain reasons, you will need to use a different motion.
   
-  Check the boxes that match any of the reasons your landlord has put next to the word 'because' on the summons and complaint.
+  Check the boxes that match any of the reasons your landlord has put next to the word 'because' on page 1 of the Summons and Complaint.
 fields:
   - "My landlord is evicting me for": eviction_causes
     datatype: checkboxes
