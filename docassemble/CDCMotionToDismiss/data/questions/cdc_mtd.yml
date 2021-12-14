@@ -110,7 +110,7 @@ event: need_another_motion
 question: |
   You will have to use a different motion
 subquestion: |
-  You said your landlord is evicting you for ${eviction_causes}
+  You said your landlord is evicting you for ${eviction_causes.true_values()}.
 buttons:
   - Try again: restart
   - Learn More: exit
